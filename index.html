@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+            href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
+            rel="stylesheet">
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+            $("#content").hide();
+            $("#submit-user").prop('disabled', true);
+            var username = "";
+            $("#username").on('keyup', function () {
+                console.log($(this).val());
+                username = $(this).val();
+                if (username.length > 0) {
+                    $("#submit-user").prop('disabled', false);
+                } else {
+                    $("#submit-user").prop('disabled', true);
+                }
+            });
+            $("#submit-user").click(() => getUserCollage(username));
+
+        });
+
+
+        function getUserCollage(username) {
+            $.ajax({
+                url: `http://54.144.136.173/collage/${username}`,
+                type: 'get',
+                success: function(response){
+                    apiResponseToHtml(response);
+                }
+            });
+        }
+
+        function apiResponseToHtml(response) {
+            console.log(response);
+            let html = "";
+            response.forEach(item => {
+                let html_frag = `
+                <div class="grid-item" style="background-image: url(${item['link-poster']})">
+                    <div>
+                        <p>${item['name']}</p>
+                        <p class="movie-starts">${item['rating']}</p>
+                    </div>
+                </div>`;
+                html += html_frag;
+            });
+            console.log(html);
+            $("#grid").empty();
+            $("#grid").append(html);
+            $("#content").show();
+        }
+
+        $(function () {
+            $("#download").on('click', function () {
+                console.log("click")
+                var element = $("#grid")[0];
+                document.body.appendChild(element);
+                html2canvas(document.body, {
+                    allowTaint: true,
+                }).then(canvas => {
+                    window.open(canvas.toDataURL());
+                });
+            });
+        })
+
+        function saveAs(uri, filename) {
+
+            var link = document.createElement('a');
+
+            if (typeof link.download === 'string') {
+
+                link.href = uri;
+                link.download = filename;
+
+                //Firefox requires the link to be in the body
+                document.body.appendChild(link);
+
+                //simulate click
+                link.click();
+
+                //remove the link when done
+                document.body.removeChild(link);
+
+            } else {
+
+                window.open(uri);
+
+            }
+        }
+    </script>
+</head>
+<body>
+<div>
+    <div>
+        <label for="username">Usuário</label>
+        <input id="username" type="text"/>
+        <button id="submit-user">Fazer colagem</button>
+    </div>
+</div>
+<div id="content">
+    <button id="download">Baixar colagem</button>
+    <div id="grid">
+    </div>
+</div>
+</body>
+</html>
